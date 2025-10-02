@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import SearchBar from "../SearchBar/SearchBar";
 import { fetchMovies } from "../../services/movieService";
 import type { Movie } from "../../types/movie";
@@ -7,38 +7,29 @@ import MovieGrid from "../MovieGrid/MovieGrid";
 import MovieModal from "../MovieModal/MovieModal";
 import Loader from "../Loader/Loader";
 import ErrorMessage from "../ErrorMessage/ErrorMessage";
+import { useQuery } from "@tanstack/react-query";
 
 function App() {
-  const [movies, setMovies] = useState<Movie[]>([]);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [clickedMovie, setClickedMovie] = useState<Movie | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [isError, setIsError] = useState<boolean>(false);
+  const [query, setQuery] = useState<string>("");
+  const { data, isError, isLoading, isSuccess } = useQuery<Movie[]>({
+    queryKey: ["myFunction", query],
+    queryFn: () => fetchMovies(query),
+    enabled: query !== "",
+  });
 
-  const loaderShow = () => {
-    setIsLoading(true);
-  };
-  const loaderHide = () => {
-    setIsLoading(false);
-  };
+  useEffect(() => {
+    if (isError) toast.error("Error fetching movies");
+  }, [isError]);
 
-  const handleMovies = async (query: string) => {
-    try {
-      setIsError(false);
-      loaderShow();
-      const data = await fetchMovies(query);
-      setMovies(data);
-      if (data.length === 0) {
-        toast.error("No movies found for your request.");
-        return;
-      }
-    } catch (error) {
-      toast.error("Error fetching movies");
-      console.log(error);
-      setIsError(true);
-    } finally {
-      loaderHide();
-    }
+  useEffect(() => {
+    if (isSuccess && data.length === 0)
+      toast.error("No movies found for your request.");
+  }, [data, isSuccess]);
+
+  const handleMovies = (query: string) => {
+    setQuery(query);
   };
 
   const modalOpen = () => setIsModalOpen(true);
@@ -57,9 +48,7 @@ function App() {
       <SearchBar onSubmit={handleMovies} />
       {isLoading && <Loader />}
       {isError && <ErrorMessage />}
-      {!isLoading && !isError && (
-        <MovieGrid movies={movies} onSelect={movieClick} />
-      )}
+      {data && <MovieGrid movies={data} onSelect={movieClick} />}
       {isModalOpen && clickedMovie && (
         <MovieModal movie={clickedMovie} onClose={modalClose} />
       )}
