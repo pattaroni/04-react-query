@@ -1,18 +1,31 @@
 import toast, { Toaster } from "react-hot-toast";
+import { Formik, Form, Field } from "formik";
+import type { FormikHelpers } from "formik";
 import css from "./SearchBar.module.css";
 
 interface SearchBarProps {
   onSubmit: (query: string) => void;
 }
 
+interface OrderFormValue {
+  query: string;
+}
+
+const initialValue: OrderFormValue = {
+  query: "",
+};
+
 export default function SearchBar({ onSubmit }: SearchBarProps) {
-  const handleSubmit = (formData: FormData) => {
-    const query = formData.get("query") as string;
-    if (query.trim() === "") {
+  const handleSubmit = (
+    value: OrderFormValue,
+    actions: FormikHelpers<OrderFormValue>
+  ) => {
+    if (value.query.trim() === "") {
       toast.error("Please enter your search query.");
       return;
     }
-    onSubmit(query.trim());
+    onSubmit(value.query.trim());
+    actions.resetForm();
   };
   return (
     <>
@@ -22,7 +35,7 @@ export default function SearchBar({ onSubmit }: SearchBarProps) {
             position="top-center"
             toastOptions={{
               className: "",
-              duration: 1000,
+              duration: 1500,
               removeDelay: 1000,
             }}
           />
@@ -42,19 +55,21 @@ export default function SearchBar({ onSubmit }: SearchBarProps) {
               removeDelay: 1000,
             }}
           />
-          <form className={css.form} action={handleSubmit}>
-            <input
-              className={css.input}
-              type="text"
-              name="query"
-              autoComplete="off"
-              placeholder="Search movies..."
-              autoFocus
-            />
-            <button className={css.button} type="submit">
-              Search
-            </button>
-          </form>
+          <Formik initialValues={initialValue} onSubmit={handleSubmit}>
+            <Form className={css.form}>
+              <Field
+                className={css.input}
+                type="text"
+                name="query"
+                placeholder="Search movies..."
+                autoFocus
+                autoComplete="off"
+              />
+              <button className={css.button} type="submit">
+                Search
+              </button>
+            </Form>
+          </Formik>
         </div>
       </header>
     </>
