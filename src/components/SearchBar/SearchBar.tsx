@@ -47,14 +47,6 @@ export default function SearchBar({ onSubmit }: SearchBarProps) {
           >
             Powered by TMDB
           </a>
-          <Toaster
-            position="top-center"
-            toastOptions={{
-              className: "",
-              duration: 1000,
-              removeDelay: 1000,
-            }}
-          />
           <Formik initialValues={initialValue} onSubmit={handleSubmit}>
             <Form className={css.form}>
               <Field
